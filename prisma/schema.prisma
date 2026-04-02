@@ -1,0 +1,311 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Enums
+enum Visibility {
+  PUBLIC
+  PRIVATE
+  FRIENDS_ONLY   // optional, if you want finer control
+}
+
+enum NotificationType {
+  LIKE
+  COMMENT
+  FOLLOW
+  MESSAGE
+  MENTION
+  GROUP_INVITE
+  STORY_REACTION
+}
+
+enum MessageStatus {
+  SENT
+  DELIVERED
+  READ
+}
+
+enum GroupRole {
+  MEMBER
+  ADMIN
+  OWNER
+}
+
+// User model
+model User {
+  id            String         @id @default(cuid())
+  firstName     String
+  lastName      String
+  email         String         @unique
+  password      String         // hashed
+  bio           String?        @db.Text
+  avatarUrl     String?        // profile picture
+  coverUrl      String?        // cover photo
+  isActive      Boolean        @default(true)
+  lastSeen      DateTime?      // optional
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  // Relationships
+  posts         Post[]
+  comments      Comment[]
+  likes         Like[]
+  stories       Story[]
+  sentMessages  Message[]      @relation("Sender")
+  receivedMessages Message[]   @relation("Receiver")
+  notifications Notification[]
+  following     Follow[]       @relation("Follower")
+  followers     Follow[]       @relation("Following")
+  groupMembers  GroupMember[]
+  storyReactions StoryReaction[]
+  ownedGroups   Group[]        @relation("GroupOwner")
+  groupPosts    GroupPost[]
+  groupComments GroupComment[]
+  groupLikes    GroupLike[]
+
+  @@index([email])
+  @@index([createdAt])
+  @@map("users")
+}
+
+// Post model
+model Post {
+  id         String     @id @default(cuid())
+  content    String     @db.Text
+  imageUrl   String?    // optional image/video
+  visibility Visibility @default(PUBLIC)
+  userId     String
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  comments   Comment[]
+  likes      Like[]
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+
+  @@index([userId])
+  @@index([createdAt])
+  @@index([visibility])
+  @@map("posts")
+}
+
+// Comment model (supports nesting)
+model Comment {
+  id        String    @id @default(cuid())
+  content   String    @db.Text
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  postId    String
+  post      Post      @relation(fields: [postId], references: [id], onDelete: Cascade)
+  parentId  String?   // null = top-level comment
+  parent    Comment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies   Comment[] @relation("CommentReplies")
+  likes     Like[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([postId])
+  @@index([parentId])
+  @@index([createdAt])
+  @@map("comments")
+}
+
+// Like model (polymorphic)
+model Like {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  postId    String?
+  post      Post?    @relation(fields: [postId], references: [id], onDelete: Cascade)
+  commentId String?
+  comment   Comment? @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, postId])
+  @@unique([userId, commentId])
+  @@index([postId])
+  @@index([commentId])
+  @@map("likes")
+}
+
+// Follow model (many-to-many self relation)
+model Follow {
+  id          String   @id @default(cuid())
+  followerId  String
+  follower    User     @relation("Follower", fields: [followerId], references: [id], onDelete: Cascade)
+  followingId String
+  following   User     @relation("Following", fields: [followingId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+
+  @@unique([followerId, followingId])
+  @@index([followerId])
+  @@index([followingId])
+  @@map("follows")
+}
+
+// Notification model
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      NotificationType
+  content   String?          @db.Text
+  referenceId String?        // ID of the related entity (post, comment, etc.)
+  isRead    Boolean          @default(false)
+  createdAt DateTime         @default(now())
+
+  @@index([userId])
+  @@index([isRead])
+  @@index([createdAt])
+  @@map("notifications")
+}
+
+// Story model (24h stories)
+model Story {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  mediaUrl   String   // image or video
+  caption    String?  @db.Text
+  expiresAt  DateTime // story deletion time
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  reactions  StoryReaction[]
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("stories")
+}
+
+// Story reactions (like/emoji on stories)
+model StoryReaction {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  storyId   String
+  story     Story    @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  reaction  String   // e.g., "❤️", "😂", etc.
+  createdAt DateTime @default(now())
+
+  @@unique([userId, storyId])
+  @@index([storyId])
+  @@map("story_reactions")
+}
+
+// Direct Message
+model Message {
+  id         String        @id @default(cuid())
+  senderId   String
+  sender     User          @relation("Sender", fields: [senderId], references: [id], onDelete: Cascade)
+  receiverId String
+  receiver   User          @relation("Receiver", fields: [receiverId], references: [id], onDelete: Cascade)
+  content    String        @db.Text
+  status     MessageStatus @default(SENT)
+  readAt     DateTime?
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+
+  @@index([senderId])
+  @@index([receiverId])
+  @@index([status])
+  @@map("messages")
+}
+
+// Group model (for groups/communities)
+model Group {
+  id          String        @id @default(cuid())
+  name        String
+  description String?       @db.Text
+  avatarUrl   String?
+  coverUrl    String?
+  visibility  Visibility    @default(PUBLIC)
+  ownerId     String
+  owner       User          @relation("GroupOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  members     GroupMember[]
+  posts       GroupPost[]
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@index([name])
+  @@map("groups")
+}
+
+// Group membership
+model GroupMember {
+  id        String    @id @default(cuid())
+  groupId   String
+  group     Group     @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role      GroupRole @default(MEMBER)
+  joinedAt  DateTime  @default(now())
+
+  @@unique([groupId, userId])
+  @@index([groupId])
+  @@index([userId])
+  @@map("group_members")
+}
+
+// Group posts (similar to normal posts but inside groups)
+model GroupPost {
+  id        String     @id @default(cuid())
+  content   String     @db.Text
+  imageUrl  String?
+  groupId   String
+  group     Group      @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  authorId  String
+  author    User       @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  comments  GroupComment[]
+  likes     GroupLike[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  @@index([groupId])
+  @@index([authorId])
+  @@index([createdAt])
+  @@map("group_posts")
+}
+
+// Group post comments
+model GroupComment {
+  id        String    @id @default(cuid())
+  content   String    @db.Text
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  postId    String
+  post      GroupPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  parentId  String?
+  parent    GroupComment? @relation("GroupCommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies   GroupComment[] @relation("GroupCommentReplies")
+  likes     GroupLike[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([postId])
+  @@index([parentId])
+  @@map("group_comments")
+}
+
+// Group post likes
+model GroupLike {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  postId    String?
+  post      GroupPost? @relation(fields: [postId], references: [id], onDelete: Cascade)
+  commentId String?
+  comment   GroupComment? @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, postId])
+  @@unique([userId, commentId])
+  @@index([postId])
+  @@index([commentId])
+  @@map("group_likes")
+}

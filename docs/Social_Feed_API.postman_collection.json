@@ -1,0 +1,700 @@
+{
+  "info": {
+    "_postman_id": "social-feed-api-v1",
+    "name": "Social Feed API",
+    "description": "Production-ready social media backend — authentication, users, posts, comments, likes, stories, messages, groups, and notifications.\n\n**Setup:**\n1. Run the *Register* or *Login* request — tokens are saved automatically to `{{accessToken}}` and `{{refreshToken}}`.\n2. All authenticated endpoints use `{{accessToken}}` from the collection variable.\n3. Set `{{baseUrl}}` to `http://localhost:3000` (already set as the default).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl",         "value": "http://localhost:3000", "type": "string" },
+    { "key": "accessToken",     "value": "", "type": "string" },
+    { "key": "refreshToken",    "value": "", "type": "string" },
+    { "key": "userId",          "value": "", "type": "string" },
+    { "key": "postId",          "value": "", "type": "string" },
+    { "key": "commentId",       "value": "", "type": "string" },
+    { "key": "storyId",         "value": "", "type": "string" },
+    { "key": "groupId",         "value": "", "type": "string" },
+    { "key": "groupPostId",     "value": "", "type": "string" },
+    { "key": "groupCommentId",  "value": "", "type": "string" },
+    { "key": "messageId",       "value": "", "type": "string" },
+    { "key": "notificationId",  "value": "", "type": "string" }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }]
+  },
+  "item": [
+    {
+      "name": "System",
+      "description": "Health and status monitoring endpoints",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/health", "host": ["{{baseUrl}}"], "path": ["health"] },
+            "description": "Returns service health. No auth required."
+          }
+        },
+        {
+          "name": "API Status",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/status", "host": ["{{baseUrl}}"], "path": ["status"] },
+            "description": "Returns API running status."
+          }
+        },
+        {
+          "name": "Endpoint Catalogue",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/endpoints", "host": ["{{baseUrl}}"], "path": ["api", "endpoints"] },
+            "description": "Returns every available API endpoint as JSON."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "description": "User authentication — register, login, token refresh, profile, password reset",
+      "item": [
+        {
+          "name": "Register",
+          "event": [{ "listen": "test", "script": { "exec": ["if (pm.response.code === 201) {", "  const json = pm.response.json();", "  pm.collectionVariables.set('accessToken',  json.data.tokens.accessToken);", "  pm.collectionVariables.set('refreshToken', json.data.tokens.refreshToken);", "  pm.collectionVariables.set('userId',       json.data.user.id);", "}"], "type": "text/javascript" } }],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"john.doe@example.com\",\n  \"password\": \"SecurePass123!\",\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\"\n}" },
+            "url": { "raw": "{{baseUrl}}/api/v1/auth/register", "host": ["{{baseUrl}}"], "path": ["api","v1","auth","register"] },
+            "description": "Register a new user. Saves accessToken, refreshToken, userId."
+          }
+        },
+        {
+          "name": "Login",
+          "event": [{ "listen": "test", "script": { "exec": ["if (pm.response.code === 200) {", "  const json = pm.response.json();", "  pm.collectionVariables.set('accessToken',  json.data.tokens.accessToken);", "  pm.collectionVariables.set('refreshToken', json.data.tokens.refreshToken);", "  pm.collectionVariables.set('userId',       json.data.user.id);", "}"], "type": "text/javascript" } }],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"john.doe@example.com\",\n  \"password\": \"SecurePass123!\"\n}" },
+            "url": { "raw": "{{baseUrl}}/api/v1/auth/login", "host": ["{{baseUrl}}"], "path": ["api","v1","auth","login"] },
+            "description": "Login and receive JWT token pair."
+          }
+        },
+        {
+          "name": "Refresh Token",
+          "event": [{ "listen": "test", "script": { "exec": ["if (pm.response.code === 200) {", "  const json = pm.response.json();", "  pm.collectionVariables.set('accessToken',  json.data.tokens.accessToken);", "  pm.collectionVariables.set('refreshToken', json.data.tokens.refreshToken);", "}"], "type": "text/javascript" } }],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}" },
+            "url": { "raw": "{{baseUrl}}/api/v1/auth/refresh-token", "host": ["{{baseUrl}}"], "path": ["api","v1","auth","refresh-token"] },
+            "description": "Exchange refresh token for new token pair."
+          }
+        },
+        {
+          "name": "Get Profile",
+          "request": {
+            "method": "GET", "header": [],
+            "url": { "raw": "{{baseUrl}}/api/v1/auth/profile", "host": ["{{baseUrl}}"], "path": ["api","v1","auth","profile"] },
+            "description": "Get authenticated user profile."
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST", "header": [],
+            "url": { "raw": "{{baseUrl}}/api/v1/auth/logout", "host": ["{{baseUrl}}"], "path": ["api","v1","auth","logout"] },
+            "description": "Logout (stateless JWT)."
+          }
+        },
+        {
+          "name": "Forgot Password",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"john.doe@example.com\"\n}" },
+            "url": { "raw": "{{baseUrl}}/api/v1/auth/forgot-password", "host": ["{{baseUrl}}"], "path": ["api","v1","auth","forgot-password"] },
+            "description": "Request a password-reset email."
+          }
+        },
+        {
+          "name": "Reset Password",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"token\": \"<reset-token-from-email>\",\n  \"newPassword\": \"NewSecurePass123!\"\n}" },
+            "url": { "raw": "{{baseUrl}}/api/v1/auth/reset-password", "host": ["{{baseUrl}}"], "path": ["api","v1","auth","reset-password"] },
+            "description": "Reset password using emailed token."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "description": "User profiles, follow system, and search",
+      "item": [
+        {
+          "name": "Get My Profile",
+          "request": {
+            "method": "GET", "header": [],
+            "url": { "raw": "{{baseUrl}}/api/v1/users/me", "host": ["{{baseUrl}}"], "path": ["api","v1","users","me"] },
+            "description": "Get authenticated user profile with follow stats."
+          }
+        },
+        {
+          "name": "Update My Profile",
+          "request": {
+            "method": "PATCH", "header": [],
+            "body": { "mode": "formdata", "formdata": [
+              { "key": "firstName", "value": "Jane", "type": "text" },
+              { "key": "lastName",  "value": "Doe",  "type": "text" },
+              { "key": "bio",       "value": "Software engineer & coffee lover", "type": "text" },
+              { "key": "avatar",    "type": "file",  "src": "" }
+            ]},
+            "url": { "raw": "{{baseUrl}}/api/v1/users/me", "host": ["{{baseUrl}}"], "path": ["api","v1","users","me"] },
+            "description": "Update profile. avatar is an optional file upload (multipart/form-data)."
+          }
+        },
+        {
+          "name": "Search Users",
+          "request": {
+            "auth": { "type": "noauth" }, "method": "GET", "header": [],
+            "url": { "raw": "{{baseUrl}}/api/v1/users/search?q=john&limit=10", "host": ["{{baseUrl}}"], "path": ["api","v1","users","search"], "query": [{"key":"q","value":"john"},{"key":"limit","value":"10"}] },
+            "description": "Search users by name or email."
+          }
+        },
+        {
+          "name": "Get User By ID",
+          "request": {
+            "auth": { "type": "noauth" }, "method": "GET", "header": [],
+            "url": { "raw": "{{baseUrl}}/api/v1/users/{{userId}}", "host": ["{{baseUrl}}"], "path": ["api","v1","users","{{userId}}"] },
+            "description": "Get a public user profile."
+          }
+        },
+        {
+          "name": "Follow / Unfollow User",
+          "request": {
+            "method": "POST", "header": [],
+            "url": { "raw": "{{baseUrl}}/api/v1/users/{{userId}}/follow", "host": ["{{baseUrl}}"], "path": ["api","v1","users","{{userId}}","follow"] },
+            "description": "Toggle follow. Returns followed:true when followed, false when unfollowed."
+          }
+        },
+        {
+          "name": "Get User Followers",
+          "request": {
+            "auth": { "type": "noauth" }, "method": "GET", "header": [],
+            "url": { "raw": "{{baseUrl}}/api/v1/users/{{userId}}/followers?page=1&limit=20", "host": ["{{baseUrl}}"], "path": ["api","v1","users","{{userId}}","followers"], "query": [{"key":"page","value":"1"},{"key":"limit","value":"20"}] },
+            "description": "Get users who follow the given user."
+          }
+        },
+        {
+          "name": "Get User Following",
+          "request": {
+            "auth": { "type": "noauth" }, "method": "GET", "header": [],
+            "url": { "raw": "{{baseUrl}}/api/v1/users/{{userId}}/following?page=1&limit=20", "host": ["{{baseUrl}}"], "path": ["api","v1","users","{{userId}}","following"], "query": [{"key":"page","value":"1"},{"key":"limit","value":"20"}] },
+            "description": "Get users that the given user follows."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Posts",
+      "description": "Global feed posts with cursor-based pagination",
+      "item": [
+        {
+          "name": "Get Global Feed",
+          "request": {
+            "auth": { "type": "noauth" }, "method": "GET", "header": [],
+            "url": { "raw": "{{baseUrl}}/api/v1/posts?limit=10", "host": ["{{baseUrl}}"], "path": ["api","v1","posts"], "query": [{"key":"limit","value":"10"},{"key":"cursor","value":"","disabled":true}] },
+            "description": "Cursor-based global public feed. Pass cursor for subsequent pages. Auth optional."
+          }
+        },
+        {
+          "name": "Create Post",
+          "event": [{ "listen": "test", "script": { "exec": ["if (pm.response.code === 201) {", "  const json = pm.response.json();", "  pm.collectionVariables.set('postId', json.data.id);", "}"], "type": "text/javascript" } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"content\": \"Hello world! This is my first post.\",\n  \"visibility\": \"PUBLIC\"\n}" },
+            "url": { "raw": "{{baseUrl}}/api/v1/posts", "host": ["{{baseUrl}}"], "path": ["api","v1","posts"] },
+            "description": "Create a post. Saves postId."
+          }
+        },
+        {
+          "name": "Create Post (with Image)",
+          "event": [{ "listen": "test", "script": { "exec": ["if (pm.response.code === 201) {", "  const json = pm.response.json();", "  pm.collectionVariables.set('postId', json.data.id);", "}"], "type": "text/javascript" } }],
+          "request": {
+            "method": "POST", "header": [],
+            "body": { "mode": "formdata", "formdata": [
+              { "key": "content",    "value": "Check out this photo!", "type": "text" },
+              { "key": "visibility", "value": "PUBLIC", "type": "text" },
+              { "key": "image",      "type": "file", "src": "" }
+            ]},
+            "url": { "raw": "{{baseUrl}}/api/v1/posts", "host": ["{{baseUrl}}"], "path": ["api","v1","posts"] },
+            "description": "Create a post with image upload (multipart/form-data, max 50 MB)."
+          }
+        },
+        {
+          "name": "Get Post By ID",
+          "request": {
+            "auth": { "type": "noauth" }, "method": "GET", "header": [],
+            "url": { "raw": "{{baseUrl}}/api/v1/posts/{{postId}}", "host": ["{{baseUrl}}"], "path": ["api","v1","posts","{{postId}}"] },
+            "description": "Get a single post."
+          }
+        },
+        {
+          "name": "Delete Post",
+          "request": {
+            "method": "DELETE", "header": [],
+            "url": { "raw": "{{baseUrl}}/api/v1/posts/{{postId}}", "host": ["{{baseUrl}}"], "path": ["api","v1","posts","{{postId}}"] },
+            "description": "Delete a post. Owner only."
+          }
+        },
+        {
+          "name": "Toggle Post Like",
+          "request": {
+            "method": "POST", "header": [],
+            "url": { "raw": "{{baseUrl}}/api/v1/posts/{{postId}}/like", "host": ["{{baseUrl}}"], "path": ["api","v1","posts","{{postId}}","like"] },
+            "description": "Like or unlike a post (toggle)."
+          }
+        },
+        {
+          "name": "Get Post Likes",
+          "request": {
+            "auth": { "type": "noauth" }, "method": "GET", "header": [],
+            "url": { "raw": "{{baseUrl}}/api/v1/posts/{{postId}}/likes", "host": ["{{baseUrl}}"], "path": ["api","v1","posts","{{postId}}","likes"] },
+            "description": "Get users who liked a post."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Comments",
+      "description": "Post comments and nested replies",
+      "item": [
+        {
+          "name": "Get Post Comments",
+          "request": {
+            "auth": { "type": "noauth" }, "method": "GET", "header": [],
+            "url": { "raw": "{{baseUrl}}/api/v1/posts/{{postId}}/comments?page=1&limit=10", "host": ["{{baseUrl}}"], "path": ["api","v1","posts","{{postId}}","comments"], "query": [{"key":"page","value":"1"},{"key":"limit","value":"10"}] },
+            "description": "Get top-level comments for a post."
+          }
+        },
+        {
+          "name": "Create Comment",
+          "event": [{ "listen": "test", "script": { "exec": ["if (pm.response.code === 201) {", "  const json = pm.response.json();", "  pm.collectionVariables.set('commentId', json.data.id);", "}"], "type": "text/javascript" } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"content\": \"Great post!\"\n}" },
+            "url": { "raw": "{{baseUrl}}/api/v1/posts/{{postId}}/comments", "host": ["{{baseUrl}}"], "path": ["api","v1","posts","{{postId}}","comments"] },
+            "description": "Comment on a post. Saves commentId."
+          }
+        },
+        {
+          "name": "Get Comment By ID",
+          "request": {
+            "auth": { "type": "noauth" }, "method": "GET", "header": [],
+            "url": { "raw": "{{baseUrl}}/api/v1/comments/{{commentId}}", "host": ["{{baseUrl}}"], "path": ["api","v1","comments","{{commentId}}"] },
+            "description": "Get a single comment."
+          }
+        },
+        {
+          "name": "Update Comment",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"content\": \"Updated comment text!\"\n}" },
+            "url": { "raw": "{{baseUrl}}/api/v1/comments/{{commentId}}", "host": ["{{baseUrl}}"], "path": ["api","v1","comments","{{commentId}}"] },
+            "description": "Update a comment. Owner only."
+          }
+        },
+        {
+          "name": "Delete Comment",
+          "request": {
+            "method": "DELETE", "header": [],
+            "url": { "raw": "{{baseUrl}}/api/v1/comments/{{commentId}}", "host": ["{{baseUrl}}"], "path": ["api","v1","comments","{{commentId}}"] },
+            "description": "Delete a comment. Owner only."
+          }
+        },
+        {
+          "name": "Get Comment Replies",
+          "request": {
+            "auth": { "type": "noauth" }, "method": "GET", "header": [],
+            "url": { "raw": "{{baseUrl}}/api/v1/comments/{{commentId}}/replies?page=1&limit=10", "host": ["{{baseUrl}}"], "path": ["api","v1","comments","{{commentId}}","replies"], "query": [{"key":"page","value":"1"},{"key":"limit","value":"10"}] },
+            "description": "Get replies to a comment."
+          }
+        },
+        {
+          "name": "Create Reply",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"content\": \"I agree with this comment!\"\n}" },
+            "url": { "raw": "{{baseUrl}}/api/v1/comments/{{commentId}}/replies", "host": ["{{baseUrl}}"], "path": ["api","v1","comments","{{commentId}}","replies"] },
+            "description": "Reply to a comment."
+          }
+        },
+        {
+          "name": "Toggle Comment Like",
+          "request": {
+            "method": "POST", "header": [],
+            "url": { "raw": "{{baseUrl}}/api/v1/comments/{{commentId}}/like", "host": ["{{baseUrl}}"], "path": ["api","v1","comments","{{commentId}}","like"] },
+            "description": "Like or unlike a comment (toggle)."
+          }
+        },
+        {
+          "name": "Get Comment Likes",
+          "request": {
+            "auth": { "type": "noauth" }, "method": "GET", "header": [],
+            "url": { "raw": "{{baseUrl}}/api/v1/comments/{{commentId}}/likes", "host": ["{{baseUrl}}"], "path": ["api","v1","comments","{{commentId}}","likes"] },
+            "description": "Get users who liked a comment."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Likes",
+      "description": "Dedicated like/unlike endpoints for posts and comments",
+      "item": [
+        {
+          "name": "Toggle Post Like",
+          "request": {
+            "method": "POST", "header": [],
+            "url": { "raw": "{{baseUrl}}/api/v1/likes/posts/{{postId}}/toggle", "host": ["{{baseUrl}}"], "path": ["api","v1","likes","posts","{{postId}}","toggle"] },
+            "description": "Like or unlike a post."
+          }
+        },
+        {
+          "name": "Get Post Likes",
+          "request": {
+            "auth": { "type": "noauth" }, "method": "GET", "header": [],
+            "url": { "raw": "{{baseUrl}}/api/v1/likes/posts/{{postId}}", "host": ["{{baseUrl}}"], "path": ["api","v1","likes","posts","{{postId}}"] },
+            "description": "Get all users who liked a post."
+          }
+        },
+        {
+          "name": "Get Post Like Stats",
+          "request": {
+            "auth": { "type": "noauth" }, "method": "GET", "header": [],
+            "url": { "raw": "{{baseUrl}}/api/v1/likes/posts/{{postId}}/stats", "host": ["{{baseUrl}}"], "path": ["api","v1","likes","posts","{{postId}}","stats"] },
+            "description": "Get like count for a post."
+          }
+        },
+        {
+          "name": "Toggle Comment Like",
+          "request": {
+            "method": "POST", "header": [],
+            "url": { "raw": "{{baseUrl}}/api/v1/likes/comments/{{commentId}}/toggle", "host": ["{{baseUrl}}"], "path": ["api","v1","likes","comments","{{commentId}}","toggle"] },
+            "description": "Like or unlike a comment."
+          }
+        },
+        {
+          "name": "Get Comment Likes",
+          "request": {
+            "auth": { "type": "noauth" }, "method": "GET", "header": [],
+            "url": { "raw": "{{baseUrl}}/api/v1/likes/comments/{{commentId}}", "host": ["{{baseUrl}}"], "path": ["api","v1","likes","comments","{{commentId}}"] },
+            "description": "Get all users who liked a comment."
+          }
+        },
+        {
+          "name": "Get Comment Like Stats",
+          "request": {
+            "auth": { "type": "noauth" }, "method": "GET", "header": [],
+            "url": { "raw": "{{baseUrl}}/api/v1/likes/comments/{{commentId}}/stats", "host": ["{{baseUrl}}"], "path": ["api","v1","likes","comments","{{commentId}}","stats"] },
+            "description": "Get like count for a comment."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Stories",
+      "description": "24-hour ephemeral stories with media upload and reactions",
+      "item": [
+        {
+          "name": "Get Stories Feed",
+          "request": {
+            "method": "GET", "header": [],
+            "url": { "raw": "{{baseUrl}}/api/v1/stories", "host": ["{{baseUrl}}"], "path": ["api","v1","stories"] },
+            "description": "Get active stories from followed users."
+          }
+        },
+        {
+          "name": "Create Story",
+          "event": [{ "listen": "test", "script": { "exec": ["if (pm.response.code === 201) {", "  const json = pm.response.json();", "  pm.collectionVariables.set('storyId', json.data.id);", "}"], "type": "text/javascript" } }],
+          "request": {
+            "method": "POST", "header": [],
+            "body": { "mode": "formdata", "formdata": [{ "key": "media", "type": "file", "src": "" }] },
+            "url": { "raw": "{{baseUrl}}/api/v1/stories", "host": ["{{baseUrl}}"], "path": ["api","v1","stories"] },
+            "description": "Upload a story (image or video, max 50 MB). Expires after 24 hours. Saves storyId."
+          }
+        },
+        {
+          "name": "Delete Story",
+          "request": {
+            "method": "DELETE", "header": [],
+            "url": { "raw": "{{baseUrl}}/api/v1/stories/{{storyId}}", "host": ["{{baseUrl}}"], "path": ["api","v1","stories","{{storyId}}"] },
+            "description": "Delete a story. Owner only."
+          }
+        },
+        {
+          "name": "React to Story",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"reaction\": \"\u2764\ufe0f\"\n}" },
+            "url": { "raw": "{{baseUrl}}/api/v1/stories/{{storyId}}/reaction", "host": ["{{baseUrl}}"], "path": ["api","v1","stories","{{storyId}}","reaction"] },
+            "description": "React to a story with an emoji. Upserts — reacting again replaces the previous reaction."
+          }
+        },
+        {
+          "name": "Get Story Reactions",
+          "request": {
+            "method": "GET", "header": [],
+            "url": { "raw": "{{baseUrl}}/api/v1/stories/{{storyId}}/reactions", "host": ["{{baseUrl}}"], "path": ["api","v1","stories","{{storyId}}","reactions"] },
+            "description": "Get all reactions for a story. Owner only."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Messages",
+      "description": "Direct messages between users with cursor-based pagination",
+      "item": [
+        {
+          "name": "Get Conversations",
+          "request": {
+            "method": "GET", "header": [],
+            "url": { "raw": "{{baseUrl}}/api/v1/messages/conversations", "host": ["{{baseUrl}}"], "path": ["api","v1","messages","conversations"] },
+            "description": "Get recent conversations, deduplicated, most recent first."
+          }
+        },
+        {
+          "name": "Get Conversation",
+          "request": {
+            "method": "GET", "header": [],
+            "url": { "raw": "{{baseUrl}}/api/v1/messages/{{userId}}?limit=20", "host": ["{{baseUrl}}"], "path": ["api","v1","messages","{{userId}}"], "query": [{"key":"limit","value":"20"},{"key":"cursor","value":"","disabled":true}] },
+            "description": "Cursor-paginated message history with a specific user."
+          }
+        },
+        {
+          "name": "Send Message",
+          "event": [{ "listen": "test", "script": { "exec": ["if (pm.response.code === 201) {", "  const json = pm.response.json();", "  pm.collectionVariables.set('messageId', json.data.id);", "}"], "type": "text/javascript" } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"content\": \"Hey, how are you?\"\n}" },
+            "url": { "raw": "{{baseUrl}}/api/v1/messages/{{userId}}", "host": ["{{baseUrl}}"], "path": ["api","v1","messages","{{userId}}"] },
+            "description": "Send a direct message. Saves messageId."
+          }
+        },
+        {
+          "name": "Mark Message as Read",
+          "request": {
+            "method": "PATCH", "header": [],
+            "url": { "raw": "{{baseUrl}}/api/v1/messages/{{messageId}}/read", "host": ["{{baseUrl}}"], "path": ["api","v1","messages","{{messageId}}","read"] },
+            "description": "Mark a message as read."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Groups",
+      "description": "Communities with members, roles, posts, comments, and likes",
+      "item": [
+        {
+          "name": "List Groups",
+          "request": {
+            "auth": { "type": "noauth" }, "method": "GET", "header": [],
+            "url": { "raw": "{{baseUrl}}/api/v1/groups?page=1&limit=20", "host": ["{{baseUrl}}"], "path": ["api","v1","groups"], "query": [{"key":"page","value":"1"},{"key":"limit","value":"20"}] },
+            "description": "List public groups."
+          }
+        },
+        {
+          "name": "Create Group",
+          "event": [{ "listen": "test", "script": { "exec": ["if (pm.response.code === 201) {", "  const json = pm.response.json();", "  pm.collectionVariables.set('groupId', json.data.id);", "}"], "type": "text/javascript" } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Tech Enthusiasts\",\n  \"description\": \"A group for tech lovers\",\n  \"visibility\": \"PUBLIC\"\n}" },
+            "url": { "raw": "{{baseUrl}}/api/v1/groups", "host": ["{{baseUrl}}"], "path": ["api","v1","groups"] },
+            "description": "Create a group. Creator is auto-assigned OWNER role. Saves groupId."
+          }
+        },
+        {
+          "name": "Get Group",
+          "request": {
+            "auth": { "type": "noauth" }, "method": "GET", "header": [],
+            "url": { "raw": "{{baseUrl}}/api/v1/groups/{{groupId}}", "host": ["{{baseUrl}}"], "path": ["api","v1","groups","{{groupId}}"] },
+            "description": "Get group details and member count."
+          }
+        },
+        {
+          "name": "Update Group",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Tech & Science Enthusiasts\",\n  \"description\": \"Updated description\"\n}" },
+            "url": { "raw": "{{baseUrl}}/api/v1/groups/{{groupId}}", "host": ["{{baseUrl}}"], "path": ["api","v1","groups","{{groupId}}"] },
+            "description": "Update group info. Owner/Admin only."
+          }
+        },
+        {
+          "name": "Delete Group",
+          "request": {
+            "method": "DELETE", "header": [],
+            "url": { "raw": "{{baseUrl}}/api/v1/groups/{{groupId}}", "host": ["{{baseUrl}}"], "path": ["api","v1","groups","{{groupId}}"] },
+            "description": "Delete group. Owner only."
+          }
+        },
+        {
+          "name": "Join / Leave Group",
+          "request": {
+            "method": "POST", "header": [],
+            "url": { "raw": "{{baseUrl}}/api/v1/groups/{{groupId}}/join", "host": ["{{baseUrl}}"], "path": ["api","v1","groups","{{groupId}}","join"] },
+            "description": "Toggle membership. Private groups cannot be joined directly."
+          }
+        },
+        {
+          "name": "Get Group Members",
+          "request": {
+            "method": "GET", "header": [],
+            "url": { "raw": "{{baseUrl}}/api/v1/groups/{{groupId}}/members", "host": ["{{baseUrl}}"], "path": ["api","v1","groups","{{groupId}}","members"] },
+            "description": "Get members with roles."
+          }
+        },
+        {
+          "name": "Update Member Role",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"role\": \"ADMIN\"\n}" },
+            "url": { "raw": "{{baseUrl}}/api/v1/groups/{{groupId}}/members/{{userId}}", "host": ["{{baseUrl}}"], "path": ["api","v1","groups","{{groupId}}","members","{{userId}}"] },
+            "description": "Promote or demote a member (MEMBER | ADMIN). Owner only."
+          }
+        },
+        {
+          "name": "Get Group Feed",
+          "request": {
+            "method": "GET", "header": [],
+            "url": { "raw": "{{baseUrl}}/api/v1/groups/{{groupId}}/posts?page=1&limit=10", "host": ["{{baseUrl}}"], "path": ["api","v1","groups","{{groupId}}","posts"], "query": [{"key":"page","value":"1"},{"key":"limit","value":"10"}] },
+            "description": "Get paginated posts in a group."
+          }
+        },
+        {
+          "name": "Create Group Post",
+          "event": [{ "listen": "test", "script": { "exec": ["if (pm.response.code === 201) {", "  const json = pm.response.json();", "  pm.collectionVariables.set('groupPostId', json.data.id);", "}"], "type": "text/javascript" } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"content\": \"Hello group members!\"\n}" },
+            "url": { "raw": "{{baseUrl}}/api/v1/groups/{{groupId}}/posts", "host": ["{{baseUrl}}"], "path": ["api","v1","groups","{{groupId}}","posts"] },
+            "description": "Post to a group. Saves groupPostId."
+          }
+        },
+        {
+          "name": "Delete Group Post",
+          "request": {
+            "method": "DELETE", "header": [],
+            "url": { "raw": "{{baseUrl}}/api/v1/groups/posts/{{groupPostId}}", "host": ["{{baseUrl}}"], "path": ["api","v1","groups","posts","{{groupPostId}}"] },
+            "description": "Delete a group post. Owner or Admin only."
+          }
+        },
+        {
+          "name": "Toggle Group Post Like",
+          "request": {
+            "method": "POST", "header": [],
+            "url": { "raw": "{{baseUrl}}/api/v1/groups/posts/{{groupPostId}}/like", "host": ["{{baseUrl}}"], "path": ["api","v1","groups","posts","{{groupPostId}}","like"] },
+            "description": "Like or unlike a group post."
+          }
+        },
+        {
+          "name": "Get Group Post Comments",
+          "request": {
+            "method": "GET", "header": [],
+            "url": { "raw": "{{baseUrl}}/api/v1/groups/posts/{{groupPostId}}/comments", "host": ["{{baseUrl}}"], "path": ["api","v1","groups","posts","{{groupPostId}}","comments"] },
+            "description": "Get comments on a group post."
+          }
+        },
+        {
+          "name": "Add Group Post Comment",
+          "event": [{ "listen": "test", "script": { "exec": ["if (pm.response.code === 201) {", "  const json = pm.response.json();", "  pm.collectionVariables.set('groupCommentId', json.data.id);", "}"], "type": "text/javascript" } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"content\": \"Great post!\"\n}" },
+            "url": { "raw": "{{baseUrl}}/api/v1/groups/posts/{{groupPostId}}/comments", "host": ["{{baseUrl}}"], "path": ["api","v1","groups","posts","{{groupPostId}}","comments"] },
+            "description": "Comment on a group post. Saves groupCommentId."
+          }
+        },
+        {
+          "name": "Reply to Group Comment",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"content\": \"I agree!\"\n}" },
+            "url": { "raw": "{{baseUrl}}/api/v1/groups/comments/{{groupCommentId}}/replies", "host": ["{{baseUrl}}"], "path": ["api","v1","groups","comments","{{groupCommentId}}","replies"] },
+            "description": "Reply to a group comment."
+          }
+        },
+        {
+          "name": "Delete Group Comment",
+          "request": {
+            "method": "DELETE", "header": [],
+            "url": { "raw": "{{baseUrl}}/api/v1/groups/comments/{{groupCommentId}}", "host": ["{{baseUrl}}"], "path": ["api","v1","groups","comments","{{groupCommentId}}"] },
+            "description": "Delete a group comment. Owner or Admin only."
+          }
+        },
+        {
+          "name": "Toggle Group Comment Like",
+          "request": {
+            "method": "POST", "header": [],
+            "url": { "raw": "{{baseUrl}}/api/v1/groups/comments/{{groupCommentId}}/like", "host": ["{{baseUrl}}"], "path": ["api","v1","groups","comments","{{groupCommentId}}","like"] },
+            "description": "Like or unlike a group comment."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Notifications",
+      "description": "In-app notifications for likes, comments, follows, and story reactions",
+      "item": [
+        {
+          "name": "Get Notifications",
+          "request": {
+            "method": "GET", "header": [],
+            "url": { "raw": "{{baseUrl}}/api/v1/notifications?page=1&limit=20", "host": ["{{baseUrl}}"], "path": ["api","v1","notifications"], "query": [{"key":"page","value":"1"},{"key":"limit","value":"20"}] },
+            "description": "Get paginated notifications."
+          }
+        },
+        {
+          "name": "Mark Notification as Read",
+          "request": {
+            "method": "PATCH", "header": [],
+            "url": { "raw": "{{baseUrl}}/api/v1/notifications/{{notificationId}}/read", "host": ["{{baseUrl}}"], "path": ["api","v1","notifications","{{notificationId}}","read"] },
+            "description": "Mark a single notification as read."
+          }
+        },
+        {
+          "name": "Mark All Notifications as Read",
+          "request": {
+            "method": "PATCH", "header": [],
+            "url": { "raw": "{{baseUrl}}/api/v1/notifications/read-all", "host": ["{{baseUrl}}"], "path": ["api","v1","notifications","read-all"] },
+            "description": "Mark all unread notifications as read."
+          }
+        }
+      ]
+    }
+  ]
+}
