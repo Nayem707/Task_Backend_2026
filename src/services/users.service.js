@@ -66,11 +66,12 @@ class UsersService {
     return this.usersRepository.getFollowing(userId, options);
   }
 
-  async searchUsers(query, options) {
-    if (!query || query.trim().length < 2) {
+  async searchUsers(query, options, viewerId = null) {
+    const normalizedQuery = (query || "").trim();
+    if (normalizedQuery.length > 0 && normalizedQuery.length < 2) {
       throw new Error("Search query must be at least 2 characters");
     }
-    return this.usersRepository.search(query.trim(), options);
+    return this.usersRepository.search(normalizedQuery, options, viewerId);
   }
 }
 

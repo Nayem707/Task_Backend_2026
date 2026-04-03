@@ -77,21 +77,35 @@ model User {
 
 // Post model
 model Post {
-  id         String     @id @default(cuid())
-  content    String     @db.Text
-  imageUrl   String?    // optional image/video
-  visibility Visibility @default(PUBLIC)
+  id         String      @id @default(cuid())
+  content    String      @db.Text
+  imageUrl   String?     // kept for backwards compat (first image)
+  visibility Visibility  @default(PUBLIC)
   userId     String
-  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   comments   Comment[]
   likes      Like[]
-  createdAt  DateTime   @default(now())
-  updatedAt  DateTime   @updatedAt
+  images     PostImage[]
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
 
   @@index([userId])
   @@index([createdAt])
   @@index([visibility])
   @@map("posts")
+}
+
+// Post images (one post → many images)
+model PostImage {
+  id        String   @id @default(cuid())
+  url       String
+  order     Int      @default(0)
+  postId    String
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@index([postId])
+  @@map("post_images")
 }
 
 // Comment model (supports nesting)

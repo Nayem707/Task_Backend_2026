@@ -1,8 +1,6 @@
 const UsersService = require("../services/users.service");
 const { asyncHandler } = require("../middlewares/errorHandler");
 const { updateProfileSchema } = require("../validators/users.validator");
-const { uploadSingle, handleUploadError } = require("../middlewares/upload");
-const path = require("path");
 
 class UsersController {
   constructor() {
@@ -15,11 +13,23 @@ class UsersController {
   });
 
   updateMe = asyncHandler(async (req, res) => {
-    const { error, value } = updateProfileSchema.validate(req.body);
+    const { error, value } = updateProfileSchema.validate(req.body, {
+      abortEarly: false,
+      stripUnknown: true,
+    });
     if (error) return res.sendValidationError(error.details);
 
     if (req.file) {
-      value.avatarUrl = `/uploads/${req.file.filename}`;
+      value.avatarUrl = `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}`;
+    }
+
+    if (Object.keys(value).length === 0) {
+      return res.sendValidationError([
+        {
+          field: ["body"],
+          message: "At least one profile field or avatar is required",
+        },
+      ]);
     }
 
     const user = await this.usersService.updateMe(req.user.id, value);
@@ -66,7 +76,11 @@ class UsersController {
     const { q } = req.query;
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 20;
-    const result = await this.usersService.searchUsers(q, { page, limit });
+    const result = await this.usersService.searchUsers(
+      q,
+      { page, limit },
+      req.user?.id,
+    );
     res.sendSuccess(result, "Users retrieved successfully");
   });
 }

@@ -5,7 +5,7 @@
 const express = require("express");
 const PostsController = require("../controllers/posts.controller");
 const { authenticate, optionalAuthenticate } = require("../middlewares/auth");
-const { uploadSingle, handleUploadError } = require("../middlewares/upload");
+const { uploadMultiple, handleUploadError } = require("../middlewares/upload");
 
 const router = express.Router();
 const postsController = new PostsController();
@@ -17,7 +17,7 @@ router.get("/", optionalAuthenticate, postsController.getAllPosts);
 router.post(
   "/",
   authenticate,
-  uploadSingle("image"),
+  uploadMultiple("image", 5),
   handleUploadError,
   postsController.createPost,
 );

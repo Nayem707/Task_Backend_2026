@@ -22,8 +22,12 @@ class PostsController {
    */
   createPost = asyncHandler(async (req, res) => {
     const body = { ...req.body };
-    if (req.file) {
-      body.imageUrl = `/uploads/${req.file.filename}`;
+    const files = req.files ?? (req.file ? [req.file] : []);
+    if (files.length > 0) {
+      body.images = files.map(
+        (f) => `${req.protocol}://${req.get("host")}/uploads/${f.filename}`,
+      );
+      body.imageUrl = body.images[0];
     }
 
     const { error, value } = createPostSchema.validate(body);

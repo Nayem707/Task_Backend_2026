@@ -19,6 +19,10 @@ const createPostSchema = Joi.object({
     "string.uri": "Image URL must be a valid URL",
   }),
 
+  images: Joi.array().items(Joi.string().uri()).max(10).optional().messages({
+    "array.max": "You can upload at most 10 images per post",
+  }),
+
   visibility: Joi.string()
     .valid("PUBLIC", "PRIVATE")
     .optional()
@@ -39,6 +43,10 @@ const updatePostSchema = Joi.object({
 
   imageUrl: Joi.string().uri().optional().allow(null).messages({
     "string.uri": "Image URL must be a valid URL",
+  }),
+
+  images: Joi.array().items(Joi.string().uri()).max(10).optional().messages({
+    "array.max": "You can upload at most 10 images per post",
   }),
 
   visibility: Joi.string().valid("PUBLIC", "PRIVATE").optional().messages({

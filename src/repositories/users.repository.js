@@ -105,21 +105,51 @@ class UsersRepository {
     return { data: items.map((f) => f.following), total, page, limit };
   }
 
-  async search(query, { page = 1, limit = 20 } = {}) {
+  async search(query, { page = 1, limit = 20 } = {}, viewerId = null) {
     const skip = (page - 1) * limit;
     const where = {
       isActive: true,
-      OR: [
+    };
+
+    if (viewerId) {
+      where.id = { not: viewerId };
+    }
+
+    if (query) {
+      where.OR = [
         { firstName: { contains: query, mode: "insensitive" } },
         { lastName: { contains: query, mode: "insensitive" } },
         { email: { contains: query, mode: "insensitive" } },
-      ],
-    };
+      ];
+    }
+
     const [items, total] = await Promise.all([
-      prisma.user.findMany({ where, skip, take: limit, select: USER_SELECT }),
+      prisma.user.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { createdAt: "desc" },
+        select: {
+          ...USER_SELECT,
+          followers: viewerId
+            ? {
+                where: { followerId: viewerId },
+                select: { id: true },
+                take: 1,
+              }
+            : false,
+        },
+      }),
       prisma.user.count({ where }),
     ]);
-    return { data: items, total, page, limit };
+
+    const data = items.map((item) => ({
+      ...item,
+      isFollowing: viewerId ? item.followers.length > 0 : false,
+      followers: undefined,
+    }));
+
+    return { data, total, page, limit };
   }
 }
 

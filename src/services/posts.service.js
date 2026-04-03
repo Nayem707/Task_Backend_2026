@@ -29,6 +29,7 @@ class PostsService {
       const post = await this.postsRepository.createPost({
         content: data.content.trim(),
         imageUrl: data.imageUrl,
+        images: data.images,
         visibility: data.visibility || "PUBLIC",
         userId,
       });

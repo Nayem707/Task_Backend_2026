@@ -17,9 +17,16 @@ class PostsRepository {
       const post = await prisma.post.create({
         data: {
           content: data.content,
-          imageUrl: data.imageUrl || null,
+          imageUrl: data.images?.[0] ?? data.imageUrl ?? null,
           visibility: data.visibility || "PUBLIC",
           userId: data.userId,
+          ...(data.images?.length
+            ? {
+                images: {
+                  create: data.images.map((url, idx) => ({ url, order: idx })),
+                },
+              }
+            : {}),
         },
         include: {
           user: {
@@ -31,6 +38,7 @@ class PostsRepository {
               avatarUrl: true,
             },
           },
+          images: { orderBy: { order: "asc" } },
           _count: {
             select: {
               comments: true,
@@ -74,12 +82,31 @@ class PostsRepository {
               avatarUrl: true,
             },
           },
+          images: { orderBy: { order: "asc" } },
           _count: { select: { comments: true, likes: true } },
         },
       });
 
       const hasNextPage = posts.length > limit;
       const items = hasNextPage ? posts.slice(0, limit) : posts;
+
+      // Attach likedByMe for the authenticated viewer
+      if (viewerId && items.length > 0) {
+        const postIds = items.map((p) => p.id);
+        const likedRows = await prisma.like.findMany({
+          where: { userId: viewerId, postId: { in: postIds } },
+          select: { postId: true },
+        });
+        const likedSet = new Set(likedRows.map((r) => r.postId));
+        items.forEach((p) => {
+          p.likedByMe = likedSet.has(p.id);
+        });
+      } else {
+        items.forEach((p) => {
+          p.likedByMe = false;
+        });
+      }
+
       return {
         data: items,
         nextCursor: hasNextPage ? items[items.length - 1].id : null,
@@ -133,6 +160,7 @@ class PostsRepository {
                 avatarUrl: true,
               },
             },
+            images: { orderBy: { order: "asc" } },
             _count: {
               select: {
                 comments: true,
@@ -208,6 +236,7 @@ class PostsRepository {
               likes: true,
             },
           },
+          images: { orderBy: { order: "asc" } },
         },
       });
 
@@ -229,6 +258,14 @@ class PostsRepository {
           content: data.content,
           imageUrl: data.imageUrl,
           visibility: data.visibility,
+          ...(data.images?.length
+            ? {
+                images: {
+                  deleteMany: {},
+                  create: data.images.map((url, idx) => ({ url, order: idx })),
+                },
+              }
+            : {}),
         },
         include: {
           user: {
@@ -240,6 +277,7 @@ class PostsRepository {
               avatarUrl: true,
             },
           },
+          images: { orderBy: { order: "asc" } },
           _count: {
             select: {
               comments: true,
@@ -306,6 +344,7 @@ class PostsRepository {
                 avatarUrl: true,
               },
             },
+            images: { orderBy: { order: "asc" } },
             _count: {
               select: {
                 comments: true,
