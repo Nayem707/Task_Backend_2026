@@ -381,6 +381,7 @@ class PostsRepository {
         limit = 10,
         sortBy = "createdAt",
         sortOrder = "desc",
+        viewerId = null,
       } = options;
 
       const skip = (page - 1) * limit;
@@ -438,6 +439,23 @@ class PostsRepository {
         }),
         prisma.post.count({ where }),
       ]);
+
+      // Attach likedByMe for the authenticated viewer
+      if (viewerId && posts.length > 0) {
+        const postIds = posts.map((p) => p.id);
+        const likedRows = await prisma.like.findMany({
+          where: { userId: viewerId, postId: { in: postIds } },
+          select: { postId: true },
+        });
+        const likedSet = new Set(likedRows.map((r) => r.postId));
+        posts.forEach((p) => {
+          p.likedByMe = likedSet.has(p.id);
+        });
+      } else {
+        posts.forEach((p) => {
+          p.likedByMe = false;
+        });
+      }
 
       return {
         data: posts,

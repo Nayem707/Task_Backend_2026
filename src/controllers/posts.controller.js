@@ -170,6 +170,7 @@ class PostsController {
     const result = await this.postsService.getFeedPosts(req.user.id, {
       page,
       limit,
+      viewerId: req.user.id,
     });
 
     res.status(200).json({
