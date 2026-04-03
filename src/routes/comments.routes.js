@@ -5,7 +5,7 @@
 
 const express = require("express");
 const CommentsController = require("../controllers/comments.controller");
-const { authenticate } = require("../middlewares/auth");
+const { authenticate, optionalAuthenticate } = require("../middlewares/auth");
 
 const router = express.Router({ mergeParams: true });
 const commentsController = new CommentsController();
@@ -15,8 +15,8 @@ const commentsController = new CommentsController();
  * Routes: /api/v1/posts/:postId/comments
  */
 
-// Get all comments for a post - Public
-router.get("/", commentsController.getPostComments);
+// Get all comments for a post - Public with optional auth for likedByMe
+router.get("/", optionalAuthenticate, commentsController.getPostComments);
 
 // Create a comment on a post - Requires authentication
 router.post("/", authenticate, commentsController.createComment);
@@ -26,8 +26,12 @@ router.post("/", authenticate, commentsController.createComment);
  * Routes: /api/v1/comments/:commentId/replies
  */
 
-// Get all replies for a comment - Public
-router.get("/:commentId/replies", commentsController.getCommentReplies);
+// Get all replies for a comment - Public with optional auth for likedByMe
+router.get(
+  "/:commentId/replies",
+  optionalAuthenticate,
+  commentsController.getCommentReplies,
+);
 
 // Create a reply to a comment - Requires authentication
 router.post(
@@ -41,8 +45,8 @@ router.post(
  * Routes: /api/v1/comments/:commentId
  */
 
-// Get a single comment - Public
-router.get("/:commentId", commentsController.getComment);
+// Get a single comment - Public with optional auth for likedByMe
+router.get("/:commentId", optionalAuthenticate, commentsController.getComment);
 
 // Update a comment - Requires authentication (must be owner)
 router.put("/:commentId", authenticate, commentsController.updateComment);
