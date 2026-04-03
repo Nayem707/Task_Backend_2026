@@ -1,6 +1,4 @@
-<div align="center">
-  <img src="../cli/public/images/ss.png" alt="Social Media Platform Banner" width="100%" height="300" style="object-fit: cover; border-radius: 10px;" />
-  
+
   # 🌟 Social Feed Platform
   
   **Modern React-based Social Media Application**
