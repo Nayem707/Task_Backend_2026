@@ -70,6 +70,7 @@ class CommentsController {
       limit,
       sortBy,
       sortOrder,
+      viewerId: req.user?.id ?? null,
     });
 
     res.status(200).json({

@@ -122,6 +122,7 @@ class CommentsService {
         limit: options.limit || 10,
         sortBy: options.sortBy || "createdAt",
         sortOrder: options.sortOrder || "desc",
+        viewerId: options.viewerId ?? null,
       });
 
       return result;

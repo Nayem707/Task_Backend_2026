@@ -58,6 +58,7 @@ class CommentsRepository {
         limit = 10,
         sortBy = "createdAt",
         sortOrder = "desc",
+        viewerId = null,
       } = options;
 
       const skip = (page - 1) * limit;
@@ -121,8 +122,31 @@ class CommentsRepository {
         }),
       ]);
 
+      // Batch-compute likedByMe for the viewer
+      let likedCommentIds = new Set();
+      if (viewerId && comments.length > 0) {
+        const allIds = comments.flatMap((c) => [
+          c.id,
+          ...c.replies.map((r) => r.id),
+        ]);
+        const likedRows = await prisma.like.findMany({
+          where: { userId: viewerId, commentId: { in: allIds } },
+          select: { commentId: true },
+        });
+        likedCommentIds = new Set(likedRows.map((r) => r.commentId));
+      }
+
+      const withLiked = comments.map((c) => ({
+        ...c,
+        likedByMe: likedCommentIds.has(c.id),
+        replies: c.replies.map((r) => ({
+          ...r,
+          likedByMe: likedCommentIds.has(r.id),
+        })),
+      }));
+
       return {
-        data: comments,
+        data: withLiked,
         pagination: {
           page,
           limit,
