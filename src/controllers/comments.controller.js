@@ -88,16 +88,6 @@ class CommentsController {
    */
   createReply = asyncHandler(async (req, res) => {
     const { commentId } = req.params;
-    const { postId } = req.query;
-
-    if (!postId) {
-      return res.status(400).json({
-        success: false,
-        statusCode: 400,
-        data: null,
-        message: "Post ID is required",
-      });
-    }
 
     const { error, value } = createCommentSchema.validate(req.body);
     if (error) {
@@ -108,7 +98,6 @@ class CommentsController {
       req.user.id,
       commentId,
       value.content,
-      postId,
     );
 
     logger.logAudit("REPLY_CREATE", req.user.id, "Reply", reply.id, null, {

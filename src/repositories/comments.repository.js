@@ -230,7 +230,14 @@ class CommentsRepository {
     try {
       const comment = await prisma.comment.findUnique({
         where: { id: commentId },
-        include: {
+        select: {
+          id: true,
+          content: true,
+          postId: true,
+          parentId: true,
+          userId: true,
+          createdAt: true,
+          updatedAt: true,
           user: {
             select: {
               id: true,

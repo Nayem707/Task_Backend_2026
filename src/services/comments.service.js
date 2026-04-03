@@ -69,15 +69,21 @@ class CommentsService {
   /**
    * Create a reply to a comment
    */
-  async createReply(userId, parentCommentId, content, postId) {
+  async createReply(userId, parentCommentId, content) {
     try {
       if (!content || content.trim().length === 0) {
         throw new ValidationError("Reply content cannot be empty");
       }
 
-      // Verify parent comment exists
+      // Verify parent comment exists and get its postId
       const parentComment =
         await this.commentsRepository.getCommentById(parentCommentId);
+
+      logger.debug("Parent comment retrieved:", {
+        parentCommentId,
+        found: !!parentComment,
+        postId: parentComment?.postId,
+      });
 
       if (!parentComment) {
         throw new NotFoundError("Parent comment not found");
@@ -86,7 +92,7 @@ class CommentsService {
       const reply = await this.commentsRepository.createComment({
         content: content.trim(),
         userId,
-        postId,
+        postId: parentComment.postId,
         parentId: parentCommentId,
       });
 
