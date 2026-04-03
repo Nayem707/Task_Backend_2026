@@ -177,12 +177,11 @@ class PostsService {
    */
   async getFeedPosts(userId, options = {}) {
     try {
-      const result = await this.postsRepository.getAllPosts({
+      const result = await this.postsRepository.getNetworkFeedPosts(userId, {
         page: options.page || 1,
         limit: options.limit || 10,
         sortBy: options.sortBy || "createdAt",
         sortOrder: options.sortOrder || "desc",
-        visibility: "PUBLIC",
       });
 
       return result;

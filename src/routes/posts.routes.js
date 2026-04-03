@@ -13,6 +13,22 @@ const postsController = new PostsController();
 // Global feed (cursor-based)
 router.get("/", optionalAuthenticate, postsController.getAllPosts);
 
+// Authenticated timeline and my posts
+router.get("/feed/me", authenticate, postsController.getMyFeed);
+router.get("/timeline", authenticate, postsController.getMyFeed);
+router.get(
+  "/me",
+  authenticate,
+  (req, _res, next) => {
+    req.params.userId = req.user.id;
+    next();
+  },
+  postsController.getUserPosts,
+);
+
+// Public posts by user
+router.get("/user/:userId", optionalAuthenticate, postsController.getUserPosts);
+
 // Create post (with optional image upload)
 router.post(
   "/",

@@ -372,6 +372,89 @@ class PostsRepository {
   }
 
   /**
+   * Get network feed posts for a user (self + followers + following)
+   */
+  async getNetworkFeedPosts(userId, options = {}) {
+    try {
+      const {
+        page = 1,
+        limit = 10,
+        sortBy = "createdAt",
+        sortOrder = "desc",
+      } = options;
+
+      const skip = (page - 1) * limit;
+
+      const [followers, following] = await Promise.all([
+        prisma.follow.findMany({
+          where: { followingId: userId },
+          select: { followerId: true },
+        }),
+        prisma.follow.findMany({
+          where: { followerId: userId },
+          select: { followingId: true },
+        }),
+      ]);
+
+      const networkUserIds = [
+        userId,
+        ...followers.map((item) => item.followerId),
+        ...following.map((item) => item.followingId),
+      ];
+
+      const uniqueNetworkUserIds = [...new Set(networkUserIds)];
+
+      const where = {
+        userId: { in: uniqueNetworkUserIds },
+        OR: [{ visibility: "PUBLIC" }, { userId }],
+      };
+
+      const [posts, total] = await Promise.all([
+        prisma.post.findMany({
+          where,
+          skip,
+          take: limit,
+          orderBy: {
+            [sortBy]: sortOrder,
+          },
+          include: {
+            user: {
+              select: {
+                id: true,
+                email: true,
+                firstName: true,
+                lastName: true,
+                avatarUrl: true,
+              },
+            },
+            images: { orderBy: { order: "asc" } },
+            _count: {
+              select: {
+                comments: true,
+                likes: true,
+              },
+            },
+          },
+        }),
+        prisma.post.count({ where }),
+      ]);
+
+      return {
+        data: posts,
+        pagination: {
+          page,
+          limit,
+          total,
+          pages: Math.ceil(total / limit),
+        },
+      };
+    } catch (error) {
+      logger.error("Error fetching network feed posts:", error);
+      throw error;
+    }
+  }
+
+  /**
    * Check if user owns the post
    */
   async isPostOwner(postId, userId) {

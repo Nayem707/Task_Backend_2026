@@ -442,6 +442,36 @@ router.get("/endpoints", (req, res) => {
             query: "?page=1&limit=20",
             description: "List public groups",
           },
+
+          {
+            method: "GET",
+            path: "/api/v1/posts/feed/me",
+            auth: true,
+            query: "?page=1&limit=10",
+            description:
+              "Get authenticated user's timeline feed (self + followers + following)",
+          },
+          {
+            method: "GET",
+            path: "/api/v1/posts/timeline",
+            auth: true,
+            query: "?page=1&limit=10",
+            description: "Alias of /posts/feed/me for timeline view",
+          },
+          {
+            method: "GET",
+            path: "/api/v1/posts/me",
+            auth: true,
+            query: "?page=1&limit=10",
+            description: "Get only authenticated user's own posts",
+          },
+          {
+            method: "GET",
+            path: "/api/v1/posts/user/:userId",
+            auth: false,
+            query: "?page=1&limit=10",
+            description: "Get posts by specific user",
+          },
           {
             method: "POST",
             path: "/api/v1/groups",
