@@ -1,7 +1,7 @@
 {
-  "name": "freelancerluxe-api",
+  "name": "social-feed-api",
   "version": "1.0.0",
-  "description": "Basketball Player Guessing Game Backend API",
+  "description": "Social Feed Backend API",
   "main": "src/server.js",
   "scripts": {
     "start": "node src/server.js",
@@ -17,12 +17,13 @@
     "beed": "npm run prisma:generate && npm run prisma:migrate && npm run seed"
   },
   "keywords": [
-    "basketball",
-    "guessing-game",
+    "social",
+    "feed",
+    "api",
+    "backend",
     "express",
     "prisma",
-    "jwt",
-    "api"
+    "nodejs"
   ],
   "author": "Freelancerluxe Team",
   "license": "MIT",
