@@ -1,11 +1,9 @@
-<div align="center">
-  <img src="../cli/public/images/ss.png" alt="Social Media Platform Banner" width="100%" height="300" style="object-fit: cover; border-radius: 10px;" />
-  
-  # 🌟 Social Feed Platform
-  
-  **Modern React-based Social Media Application**
-  
-  [![React](https://img.shields.io/badge/React-19.2.4-blue.svg)](https://reactjs.org/) [![Redux Toolkit](https://img.shields.io/badge/Redux%20Toolkit-2.11.2-purple.svg)](https://redux-toolkit.js.org/) [![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-4.2.2-38bdf8.svg)](https://tailwindcss.com/) [![Vite](https://img.shields.io/badge/Vite-8.0.1-646cff.svg)](https://vitejs.dev/) [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+# 🌟 Social Feed Platform
+
+**Modern React-based Social Media Application**
+
+[![React](https://img.shields.io/badge/React-19.2.4-blue.svg)](https://reactjs.org/) [![Redux Toolkit](https://img.shields.io/badge/Redux%20Toolkit-2.11.2-purple.svg)](https://redux-toolkit.js.org/) [![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-4.2.2-38bdf8.svg)](https://tailwindcss.com/) [![Vite](https://img.shields.io/badge/Vite-8.0.1-646cff.svg)](https://vitejs.dev/) [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+
 </div>
 
 ---
