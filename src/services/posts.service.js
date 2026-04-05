@@ -74,11 +74,16 @@ class PostsService {
   /**
    * Get a single post by ID
    */
-  async getPostById(postId) {
+  async getPostById(postId, viewerId = null) {
     try {
       const post = await this.postsRepository.getPostById(postId);
 
       if (!post) {
+        throw new NotFoundError("Post not found");
+      }
+
+      // PRIVATE posts are only visible to their author
+      if (post.visibility === "PRIVATE" && post.userId !== viewerId) {
         throw new NotFoundError("Post not found");
       }
 
@@ -94,7 +99,7 @@ class PostsService {
    */
   async updatePost(postId, userId, data) {
     try {
-      const post = await this.postsRepository.getPostById(postId);
+      const post = await this.postsRepository.getPostById(postId); // owner check below, no viewer filter needed
 
       if (!post) {
         throw new NotFoundError("Post not found");
@@ -130,7 +135,7 @@ class PostsService {
    */
   async deletePost(postId, userId) {
     try {
-      const post = await this.postsRepository.getPostById(postId);
+      const post = await this.postsRepository.getPostById(postId); // owner check below, no viewer filter needed
 
       if (!post) {
         throw new NotFoundError("Post not found");
@@ -163,6 +168,7 @@ class PostsService {
         limit: options.limit || 10,
         sortBy: options.sortBy || "createdAt",
         sortOrder: options.sortOrder || "desc",
+        viewerId: options.viewerId || null,
       });
 
       return result;

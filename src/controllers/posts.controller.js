@@ -79,7 +79,7 @@ class PostsController {
   getPostById = asyncHandler(async (req, res) => {
     const { id } = req.params;
 
-    const post = await this.postsService.getPostById(id);
+    const post = await this.postsService.getPostById(id, req.user?.id ?? null);
 
     res.status(200).json({
       success: true,
@@ -148,6 +148,7 @@ class PostsController {
     const result = await this.postsService.getUserPosts(userId, {
       page,
       limit,
+      viewerId: req.user?.id ?? null,
     });
 
     res.status(200).json({

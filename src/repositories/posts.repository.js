@@ -322,13 +322,18 @@ class PostsRepository {
         limit = 10,
         sortBy = "createdAt",
         sortOrder = "desc",
+        viewerId = null,
       } = options;
 
       const skip = (page - 1) * limit;
 
+      // Viewers who aren't the owner only see PUBLIC posts
+      const where =
+        viewerId === userId ? { userId } : { userId, visibility: "PUBLIC" };
+
       const [posts, total] = await Promise.all([
         prisma.post.findMany({
-          where: { userId },
+          where,
           skip,
           take: limit,
           orderBy: {
@@ -353,7 +358,7 @@ class PostsRepository {
             },
           },
         }),
-        prisma.post.count({ where: { userId } }),
+        prisma.post.count({ where }),
       ]);
 
       return {

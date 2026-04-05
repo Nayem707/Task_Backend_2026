@@ -40,6 +40,7 @@ router.post(
 
 // Individual post
 router.get("/:id", optionalAuthenticate, postsController.getPostById);
+router.put("/:id", authenticate, postsController.updatePost);
 router.delete("/:id", authenticate, postsController.deletePost);
 
 // Like/unlike post
